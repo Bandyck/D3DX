@@ -76,6 +76,9 @@ void cMainGame::Update()
 
 	if (m_pCamera)
 		m_pCamera->Update(); 
+
+	if (m_pRootFrame)
+		m_pRootFrame->Update(m_pRootFrame->GetKeyFrame(), NULL);
 }
 
 void cMainGame::Render()
