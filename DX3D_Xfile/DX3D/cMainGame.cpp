@@ -105,6 +105,7 @@ void cMainGame::Update()
 
 	if (m_pCubeMan)
 		m_pCubeMan->Update(m_pMap); 
+
 	g_pTimeManager->Update();
 	if (m_pSkinnedMesh)
 		m_pSkinnedMesh->Update();
@@ -164,31 +165,42 @@ void cMainGame::WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	switch (message)
 	{
-	case WM_LBUTTONDOWN:
+		case WM_LBUTTONDOWN:
 		{
-			cRay r = cRay::RayAtWorldSpace(LOWORD(lParam), HIWORD(lParam)); 
+			cRay r = cRay::RayAtWorldSpace(LOWORD(lParam), HIWORD(lParam));
 			for (int i = 0; i < m_vecSphere.size(); i++)
 			{
-				m_vecSphere[i].isPicked = r.IsPicked(&m_vecSphere[i]); 
+				m_vecSphere[i].isPicked = r.IsPicked(&m_vecSphere[i]);
 			}
 		}
 		break;
-	case WM_RBUTTONDOWN:
+		/// 픽킹
+		//case WM_RBUTTONDOWN:
+	//	{
+	//		cRay r = cRay::RayAtWorldSpace(LOWORD(lParam), HIWORD(lParam));
+	//		for (int i = 0; i < m_vecPlaneVertex.size(); i+= 3)
+	//		{
+	//			D3DXVECTOR3 v(0, 0, 0); 
+	//			if (r.IntersectTri(
+	//				m_vecPlaneVertex[i + 0].p,
+	//				m_vecPlaneVertex[i + 1].p,
+	//				m_vecPlaneVertex[i + 2].p,
+	//				v
+	//			))
+	//			{
+	//				m_vPickedPosition = v; 
+	//			}
+	//		}
+	//	}
+	//	break;
+	//}
+
+		// 1023 추가
+		case WM_RBUTTONDOWN:
 		{
-			cRay r = cRay::RayAtWorldSpace(LOWORD(lParam), HIWORD(lParam));
-			for (int i = 0; i < m_vecPlaneVertex.size(); i+= 3)
-			{
-				D3DXVECTOR3 v(0, 0, 0); 
-				if (r.IntersectTri(
-					m_vecPlaneVertex[i + 0].p,
-					m_vecPlaneVertex[i + 1].p,
-					m_vecPlaneVertex[i + 2].p,
-					v
-				))
-				{
-					m_vPickedPosition = v; 
-				}
-			}
+			static int n = 0;
+			//m_pSkinnedMesh->SetAnimationIndex(++n);
+			m_pSkinnedMesh->SetAnimationIndexBlend(++n);
 		}
 		break;
 	}

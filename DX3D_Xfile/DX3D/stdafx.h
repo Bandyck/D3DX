@@ -3,6 +3,11 @@
 // are changed infrequently
 //
 
+#ifdef UNICODE
+#pragma comment(linker, "/entry:wWinMainCRTStartup /subsystem:console")
+#else
+#pragma comment(linker, "/entry:WinMainCRTStartup /subsystem:console")
+#endif
 #pragma once
 
 #include "targetver.h"
@@ -24,6 +29,7 @@
 #include <map>
 #include <set>
 #include <list>
+#include <iostream>
 #include <assert.h>
 
 #include <d3dx9.h>

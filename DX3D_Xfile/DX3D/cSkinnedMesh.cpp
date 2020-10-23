@@ -5,6 +5,11 @@
 cSkinnedMesh::cSkinnedMesh()
 	: m_pRoot(NULL)
 	, m_pAniController(NULL)
+	// 1023 추가
+	, m_fBlendTime(0.3f)			// 애니메이션의 길이가 0.3초 보다는 길어야 자연스럽게 진행됨. 보통은 0.3보다는 기니까 usually하게 0.3 사용
+	, m_fPassedBlendTime(0.0f)
+	, m_isAnimBlend(false)
+	//, m_fIdleTime(0.0f)
 {
 }
 
@@ -38,6 +43,45 @@ void cSkinnedMesh::Setup(char * szFolder, char * szFile)
 
 void cSkinnedMesh::Update()
 {
+
+	// 1023 추가
+	if (m_isAnimBlend)
+	{
+		m_fPassedBlendTime += g_pTimeManager->GetElapsedTime();
+		//cout << g_pTimeManager->GetElapsedTime() << ' ' << m_fPassedBlendTime << ' ' << m_fBlendTime << ' ' << m_fAniTime << endl;
+		if (m_fPassedBlendTime >= m_fBlendTime)
+		{
+			//cout << "2 " << endl;
+			m_isAnimBlend = false;
+			m_pAniController->SetTrackWeight(0, 1.0f);
+			m_pAniController->SetTrackEnable(1, false);
+		}
+		else
+		{
+			float fWeight = m_fPassedBlendTime / m_fBlendTime;
+			m_pAniController->SetTrackWeight(0, fWeight);
+			m_pAniController->SetTrackWeight(1, 1.0f - fWeight);
+		}
+	}
+	//else
+	//{
+	//	bool isIdle = false;
+	//	//float m_fIdleTime = 0.0f;
+	//	m_fIdleTime += g_pTimeManager->GetElapsedTime();
+	//	if (m_fIdleTime > m_fAniTime)
+	//	{
+	//		isIdle = true;
+	//		cout << m_fAniTime << ' ' << m_fIdleTime << endl;
+	//	}
+	//	if (isIdle)
+	//	{
+	//		SetAnimationIndexBlend(4);
+	//		isIdle = false;
+	//		m_fIdleTime = 0.0f;
+	//	}
+	//}
+
+	// 1023 이전 내용
 	m_pAniController->AdvanceTime(g_pTimeManager->GetElapsedTime(), NULL);
 	Update(m_pRoot, NULL);
 	UpdateSkinnedMesh(m_pRoot);
@@ -157,4 +201,50 @@ void cSkinnedMesh::UpdateSkinnedMesh(LPD3DXFRAME pFrame)
 		UpdateSkinnedMesh(pFrame->pFrameSibling);
 
 
+}
+
+void cSkinnedMesh::SetAnimationIndex(int nIndex)
+{
+	int num = m_pAniController->GetNumAnimationSets();
+	if (nIndex >= num)
+		nIndex = nIndex % num;
+
+	LPD3DXANIMATIONSET pAnimSet = NULL;
+	m_pAniController->GetAnimationSet(nIndex, &pAnimSet);
+	//cout << nIndex << ' ' << pAnimSet->GetPeriod() << endl;
+	m_pAniController->SetTrackAnimationSet(0, pAnimSet);
+	//m_pAniController->ResetTime();
+	m_pAniController->GetPriorityBlend();
+}
+
+void cSkinnedMesh::SetAnimationIndexBlend(int nIndex)
+{
+	m_isAnimBlend = true;
+	m_fPassedBlendTime = 0.0f;
+
+	int num = m_pAniController->GetNumAnimationSets();
+	if (nIndex >= num)
+		nIndex = nIndex % num;
+
+	LPD3DXANIMATIONSET	pPrevAnimSet = NULL;
+	LPD3DXANIMATIONSET	pNextAnimSet = NULL;
+
+	D3DXTRACK_DESC	stTrackDesc;
+	m_pAniController->GetTrackDesc(0, &stTrackDesc);
+
+	m_pAniController->GetTrackAnimationSet(0, &pPrevAnimSet);
+	m_pAniController->SetTrackAnimationSet(1, pPrevAnimSet);
+	m_pAniController->SetTrackDesc(1, &stTrackDesc);
+
+	m_pAniController->GetAnimationSet(nIndex, &pNextAnimSet);
+	//m_fAniTime = pNextAnimSet->GetPeriod();
+	//cout << nIndex << ' ' << num << ' ' << pNextAnimSet->GetPeriod() << endl;
+	m_pAniController->SetTrackAnimationSet(0, pNextAnimSet);
+	m_pAniController->SetTrackPosition(0, 0.0f);
+	
+	m_pAniController->SetTrackWeight(0, 0.0f);
+	m_pAniController->SetTrackWeight(1, 1.0f);
+
+	SafeRelease(pPrevAnimSet);
+	SafeRelease(pNextAnimSet);
 }
